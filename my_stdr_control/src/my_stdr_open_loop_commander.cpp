@@ -76,11 +76,11 @@ int main(int argc, char **argv) {
     	loop_timer.sleep();
     }
 
-    //Turn right
+    //Turn left
     twist_cmd.linear.x = 0.0; //stop moving forward
     twist_cmd.angular.z = yaw_rate; //and start spinning in place
     timer= 0.0; //reset the timer
-    while(timer < time_3_sec) {
+    while(timer < 2.8) {
         twist_commander.publish(twist_cmd);
         timer+= sample_dt;
         loop_timer.sleep();
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     twist_cmd.angular.z = 0.0; //and stop spinning in place 
     twist_cmd.linear.x = speed; //and move forward again
     timer = 0.0; //reset the timer
-    while(timer < 3) {
+    while(timer < 2.7) {
         twist_commander.publish(twist_cmd);
         timer+= sample_dt;
         loop_timer.sleep();
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     twist_cmd.linear.x = 0.0; //stop moving forward
     twist_cmd.angular.z = -yaw_rate; //and start spinning in place
     timer= 0.0; //reset the timer
-    while(timer < 2) {
+    while(timer < 2.5) {
         twist_commander.publish(twist_cmd);
         timer+= sample_dt;
         loop_timer.sleep();
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
     twist_cmd.angular.z = 0.0; //and stop spinning in place 
     twist_cmd.linear.x = speed; //and move forward again
     timer = 0.0; //reset the timer
-    while(timer < 1) {
+    while(timer < .7) {
         twist_commander.publish(twist_cmd);
         timer+= sample_dt;
         loop_timer.sleep();
@@ -191,6 +191,26 @@ int main(int argc, char **argv) {
     twist_cmd.linear.x = speed; //and move forward again
     timer = 0.0; //reset the timer
     while(timer < 2) {
+        twist_commander.publish(twist_cmd);
+        timer+= sample_dt;
+        loop_timer.sleep();
+    }
+
+    //Turn left
+    twist_cmd.linear.x = 0.0; //stop moving forward
+    twist_cmd.angular.z = yaw_rate; //and start spinning in place
+    timer= 0.0; //reset the timer
+    while(timer < 4) {
+        twist_commander.publish(twist_cmd);
+        timer+= sample_dt;
+        loop_timer.sleep();
+    }
+
+    //Got straight
+    twist_cmd.angular.z = 0.0; //and stop spinning in place 
+    twist_cmd.linear.x = speed; //and move forward again
+    timer = 0.0; //reset the timer
+    while(timer < 4) {
         twist_commander.publish(twist_cmd);
         timer+= sample_dt;
         loop_timer.sleep();
