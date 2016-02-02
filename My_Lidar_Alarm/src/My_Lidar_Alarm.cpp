@@ -24,48 +24,41 @@
   // to improve reliability and avoid false alarms or failure to see an obstacle
 
   void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
-    if (ping_index_<0)  {
+      if (ping_index_<0)  {
           //for first message received, set up the desired index of LIDAR range to eval
-      angle_min_ = laser_scan.angle_min;
-      angle_max_ = laser_scan.angle_max;
-      angle_increment_ = laser_scan.angle_increment;
-      range_min_ = laser_scan.range_min;
-      range_max_ = laser_scan.range_max;
+          angle_min_ = laser_scan.angle_min;
+          angle_max_ = laser_scan.angle_max;
+          angle_increment_ = laser_scan.angle_increment;
+          range_min_ = laser_scan.range_min;
+          range_max_ = laser_scan.range_max;
           // what is the index of the ping that is straight ahead?
           // BETTER would be to use transforms, which would reference how the LIDAR is mounted;
           // but this will do for simple illustration
-      ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
-      ROS_INFO("LIDAR setup: ping_index = %d",ping_index_);
-
-    }
-
-    double[] pingList = new double[angle_max_- angle_min_];
-    for(int i = angle_min_; i < angle_max_; i++){
-      pingList[i- angle_min_] = (int) ((0.0 -i)/angle_increment_);
-    }
-
-    for(int i = range_min_; i < range_max_; i++){ 
-     ping_dist_in_front_ = laser_scan.ranges[pingList[i]];
-
+          ping_index_ = (int) ((0.0 -angle_min_)/angle_increment_);
+          ROS_INFO("LIDAR setup: ping_index = %d",ping_index_);
+          
+      }
+      
+     for(int i = range_min_; i < range_max_; i++){ 
+     ping_dist_in_front_ = laser_scan.ranges[i];
+   }
      ROS_INFO("ping dist in front = %f",ping_dist_in_front_);
      if (ping_dist_in_front_<MIN_SAFE_DISTANCE) {
-       ROS_WARN("DANGER, WILL ROBINSON!!");
-       laser_alarm_=true;
+         ROS_WARN("DANGER, WILL ROBINSON!!");
+         laser_alarm_=true;
      }
      else {
-       laser_alarm_=false;
+         laser_alarm_=false;
      }
-
      std_msgs::Bool lidar_alarm_msg;
      lidar_alarm_msg.data = laser_alarm_;
      lidar_alarm_publisher_.publish(lidar_alarm_msg);
      std_msgs::Float32 lidar_dist_msg;
      lidar_dist_msg.data = ping_dist_in_front_;
      lidar_dist_publisher_.publish(lidar_dist_msg);   
-   }
- }
+  }
 
- int main(int argc, char **argv) {
+  int main(int argc, char **argv) {
       ros::init(argc, argv, "lidar_alarm"); //name this node
       ros::NodeHandle nh; 
       //create a Subscriber object and have it subscribe to the lidar topic
@@ -78,5 +71,5 @@
       // forces refreshing wakeups upon new data arrival
       // main program essentially hangs here, but it must stay alive to keep the callback function alive
       return 0; // should never get here, unless roscore dies
-    }
+  }
 
