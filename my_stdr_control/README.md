@@ -1,6 +1,6 @@
 # my_stdr_control
 
-A simulation of making a robot run through a courseand publishing results
+A simulation of making a robot run through a course and publishing results
 
 ## Example usage
 	
