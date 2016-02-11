@@ -2,7 +2,7 @@
 // illustrates how to send a request to the path_service service
 
 #include <ros/ros.h>
-#include <example_ros_service/PathSrv.h> // this message type is defined in the current package
+#include <Path_Services/PathSrv.h> // this message type is defined in the current package
 #include <iostream>
 #include <string>
 #include <nav_msgs/Path.h>
@@ -22,7 +22,7 @@ geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "path_client");
     ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<example_ros_service::PathSrv>("path_service");
+    ros::ServiceClient client = n.serviceClient<Path_Services::PathSrv>("path_service");
     geometry_msgs::Quaternion quat;
     
     while (!client.exists()) {
@@ -30,13 +30,13 @@ int main(int argc, char **argv) {
       ros::Duration(1.0).sleep();
     }
     ROS_INFO("connected client to service");
-    example_ros_service::PathSrv path_srv;
+    Path_Services::PathSrv path_srv;
     
     //create some path points...this should be done by some intelligent algorithm, but we'll hard-code it here
     geometry_msgs::PoseStamped pose_stamped;
     geometry_msgs::Pose pose;
-    pose.position.x = 1.0; // say desired x-coord is 1
-    pose.position.y = 0.0;
+    pose.position.x = 0.0; // say desired x-coord is 1
+    pose.position.y = 4.0;
     pose.position.z = 0.0; // let's hope so!
     pose.orientation.x = 0.0; //always, for motion in horizontal plane
     pose.orientation.y = 0.0; // ditto
@@ -45,8 +45,40 @@ int main(int argc, char **argv) {
     pose_stamped.pose = pose;
     path_srv.request.nav_path.poses.push_back(pose_stamped);
     
+    pose_stamped.pose.position.y= -7.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= 2.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= 4.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= -5.0  ; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    //pose_stamped.pose.position.y= -.5; // say desired y-coord is 1.0
+    //path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= 5.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= -1.5; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= 4.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    pose_stamped.pose.position.y= -7.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped); 
+
+    pose_stamped.pose.position.y= 7.0; // say desired y-coord is 1.0
+    path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+
+    /*
     // some more poses...
-    quat = convertPlanarPhi2Quaternion(1.57); // get a quaterion corresponding to this heading
+    quat = convertPlanarPhi2Quaternion(1.57); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;   
     pose_stamped.pose.position.y=1.0; // say desired y-coord is 1.0
     path_srv.request.nav_path.poses.push_back(pose_stamped);
@@ -55,6 +87,7 @@ int main(int argc, char **argv) {
     pose_stamped.pose.orientation = quat;  
     //desired position is not updated...just the desired heading  
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+    */
     client.call(path_srv);
 
     return 0;

@@ -29,8 +29,8 @@ catkin_simple()
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
-cs_add_executable(Path_Client src/my_path_client.cpp)
-cs_add_executable(Path_Services src/my_path_service.cpp)
+cs_add_executable(my_Path_Client src/my_path_client.cpp)
+cs_add_executable(my_Path_Services src/my_path_service.cpp)
 
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
