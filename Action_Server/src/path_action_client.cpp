@@ -13,11 +13,11 @@
 // and include the header file below
 #include<Action_Server/path_msg.action.h>
 
+bool lidar_lidar_active =false;
 
 // This function will be called once when the goal completes
 // this is optional, but it is a convenient way to get access to the "result" message sent by the server
-void doneCb(const actionlib::SimpleClientGoalState& state,
-    const Action_Server::path_msgResultConstPtr& result) {
+void alarmCallback (const actionlib::SimpleClientGoalState& state, const Action_Server::path_msgResultConstPtr& result) {
     ROS_INFO(" doneCb: server responded with state [%s]", state.toString().c_str());
     int diff = result->output - result->goal_stamp;
     ROS_INFO("got result output = %d; goal_stamp = %d; diff = %d",result->output,result->goal_stamp,diff);

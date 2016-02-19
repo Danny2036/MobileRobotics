@@ -20,21 +20,9 @@
 // These are referred to by the root name (Action) and appended name (Action)
 #include<Action_Server/path_msg.action.h>
 
-
-bool g_lidar_alarm = false;
-
 geometry_msgs::Twist g_twist;
 ros::Publisher g_twist_commander;
 geometry_msgs::Pose g_pose;
-
-void lidarCallback(const std_msg::Bool& alarm_msg){
-  g_lidar_alarm = alarm_msg.data;
-  if(g_lidar_alarm){
-    ROS_INFO("Danger Will Robinson!!!!!");
-  } else {
-    ROS_INFO("It's all A-ok");
-  }
-}
 
 class PathActionServer {
 private:
@@ -109,7 +97,7 @@ private:
     ROS_INFO("goal input is: %d", goal->input);
 
     std::vector<double> spin_angle = goal->angle;
-    std::vector<double> distance = goal->distance;
+    std::vector<double> travel_distance = goal->distance;
     int num_angles = spin_angle.size();
 
     ros::Rate timer(1.0); // 1Hz timer
@@ -121,19 +109,27 @@ private:
      feedback_.fdbk = countdown_val_;
      as.publishFeedback(feedback_);
      for(int i = 0 ; i < num_angles; i++){
+      do_spin(spin_angle[i]);
+      do_move(travel_distance[i]);
+      ROS_INFO("spin_angle = %f", spin_angle[i]);
+      ROS_INFO("travel_distance = %f", travel_distance[i]);
+    }
 
+    do_halt();
 
-      //TODO: Spin, move, the works
+    countdown_val_--;
+    timer.sleep();
+  }
 
+  result_.output = countdown_val_;
+  as_.setSucceeded(result_);
+}
 
-
-
-     }
 
        // each iteration, check if cancellation has been ordered
-     if (as_.isPreemptRequested()){	
-      ROS_WARN("goal cancelled!");
-      result_.output = countdown_val_;
+if (as_.isPreemptRequested()){	
+  ROS_WARN("goal cancelled!");
+  result_.output = countdown_val_;
           as_.setAborted(result_); // tell the client we have given up on this goal; send the result message as well
           return; // done with callback
         }
@@ -239,26 +235,20 @@ double MobotActionServer::min_spin(double spin_angle) {
   }
 
 //a function to move forward by a specified distance (in meters), then halt
-void MobotActionServer::do_move(double distance) { // always assumes robot is already oriented properly
+void do_move(double distance) { // always assumes robot is already oriented properly
                                 // but allow for negative distance to mean move backwards
-  ros::Rate loop_timer(1/g_sample_dt);
-  double timer=0.0;
-  double final_time = fabs(distance)/g_move_speed;
+    ros::Rate loop_timer(1/g_sample_dt);
+    double timer=0.0;
+    double final_time = fabs(distance)/g_move_speed;
     g_twist_cmd.angular.z = 0.0; //stop spinning
     g_twist_cmd.linear.x = sgn(distance)*g_move_speed;
     while(timer<final_time) {
-      ros::Subscriber alarm_subscriber = nh_.subscribe("lidar_alarm",1,alarmCallback);
-      if(g_lidar_alarm) {
-        ROS_WARN("lidar_alarm activated! too close... mission canceled!");
-            //do_halt();
-        break;
-      }
-      g_twist_commander.publish(g_twist_cmd);
-      timer+=g_sample_dt;
-      loop_timer.sleep(); 
-    }  
+          g_twist_commander.publish(g_twist_cmd);
+          timer+=g_sample_dt;
+          loop_timer.sleep(); 
+          }  
     do_halt();
-  }
+}
 
   int main(int argc, char** argv) {
     ros::init(argc, argv, "timer_action_server_node"); // name this node 
