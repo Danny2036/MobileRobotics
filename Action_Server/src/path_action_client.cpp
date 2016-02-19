@@ -13,25 +13,40 @@
 // and include the header file below
 #include<Action_Server/path_msg.action.h>
 
-bool lidar_lidar_active =false;
+bool lidar_alarm_active =false;
 
 // This function will be called once when the goal completes
 // this is optional, but it is a convenient way to get access to the "result" message sent by the server
-void alarmCallback (const actionlib::SimpleClientGoalState& state, const Action_Server::path_msgResultConstPtr& result) {
+void doneCallback (const actionlib::SimpleClientGoalState& state, const Action_Server::path_msgResultConstPtr& result) {
     ROS_INFO(" doneCb: server responded with state [%s]", state.toString().c_str());
-    int diff = result->output - result->goal_stamp;
-    ROS_INFO("got result output = %d; goal_stamp = %d; diff = %d",result->output,result->goal_stamp,diff);
+    bool isSuccessful = result->completed;
+
+    if(isSuccessful){
+    	ROS_INFO("Path completed. BooYah");
+    } else{
+    	ROS_INFO("Shucks, it didn't work");
+    }
+    //ROS_INFO("got result output = %d; goal_stamp = %d; diff = %d",result->output,result->goal_stamp,diff);
+}
+
+void alarmCallback(const std_msgs::Bool& alarm_msg){
+	lidar_alarm_active = alarm_msg.data;
+	if(lidar_alarm_active){
+		ROS_INFO("Lidar alarm went off");
+	}
 }
 
 int main(int argc, char** argv) {
         ros::init(argc, argv, "path_msg_action_client_node"); // name this node 
-        int g_count = 0;
+        ros::NodeHandle nh;
         // here is a "goal" object compatible with the server, as defined in Action_Server/action
         Action_Server::path_msgGoal goal; 
         
         // use the name of our server, which is: path_action (named in Action_Server.cpp)
         // the "true" argument says that we want our new client to run as a separate thread (a good idea)
         actionlib::SimpleActionClient<Action_Server::path_msg.action> action_client("path_action", true);
+
+        ros::Subscriber lidar_alarm_sub = nh.subscribe("lidar_alarm", 1, alarmCallback);
         
         // attempt to connect to the server:
         ROS_INFO("waiting for server: ");
@@ -50,21 +65,17 @@ int main(int argc, char** argv) {
 
 
         while(ros::ok) {
-        // stuff a goal message:
-            g_count++;
-        goal.input = g_count; // this merely sequentially numbers the goals sent
-        //action_client.sendGoal(goal); // simple example--send goal, but do not specify callbacks
-        action_client.sendGoal(goal,&doneCb); // we could also name additional callback functions here, if desired
-        //    action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); //e.g., like this
-        
-        bool finished_before_timeout = action_client.waitForResult(ros::Duration(5.0));
-        //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
-        if (!finished_before_timeout) {
-            ROS_WARN("giving up waiting on result for goal number %d",g_count);
-            return 0;
+        	if(lidar_alarm_active){
+        		action_client.cancelGoal();
+
+        		//TURRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRNNNNNNNNNNNNNNNNNNNNNNNNN
+        		
+        		lidar_alarm_active = false;
+        	}
         }
         else {
-          //if here, then server returned a result to us
+        	//goals
+        	
         }
         
     }
