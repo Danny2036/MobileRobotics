@@ -1,4 +1,4 @@
-// Action_Server: 2nd version, includes "cancel" and "feedback"
+// PathActionServer: 2nd version, includes "cancel" and "feedback"
 // expects client to give an integer corresponding to a timer count, in seconds
 // server counts up to this value, provides feedback, and can be cancelled any time
 // re-use the existing action message, although not all fields are needed
@@ -15,10 +15,10 @@
 #include <string>
 #include <math.h>
 //the following #include refers to the "action" message defined for this package
-// The action message can be found in: .../Action_Server/action/Action.action
+// The action message can be found in: .../PathActionServer/action/Action.action
 // Automated header generation creates multiple headers for message I/O
 // These are referred to by the root name (Action) and appended name (Action)
-#include<Action_Server/path_msg.action.h>
+#include <Action_Server/path_msgAction.h>
 
 geometry_msgs::Twist g_twist;
 ros::Publisher g_twist_commander;
@@ -30,18 +30,16 @@ private:
     ros::NodeHandle nh_;  // we'll need a node handle; get one upon instantiation
 
     // this class will own a "SimpleActionServer" called "as_".
-    // it will communicate using messages defined in Action_Server/action/Action.action
-    // the type "path_msg.action" is auto-generated from our name "Action" and generic name "Action"
-    actionlib::SimpleActionServer<Action_Server::path_msg.action> as_;
+    // it will communicate using messages defined in PathActionServer/action/Action.action
+    // the type "path_msgAction" is auto-generated from our name "Action" and generic name "Action"
+    actionlib::SimpleActionServer<Action_Server::path_msgAction> as_;
     ros::Publisher vel_pub; //Publisher that published to cmd_
     
     // here are some message types to communicate with our client(s)
-    Action_Server::ActionGoal goal_; // goal message, received from client
-    Action_Server::ActionResult result_; // put results here, to be sent back to the client when done w/ goal
-    Action_Server::ActionFeedback feedback_; // for feedback 
+    Action_Server::path_msgGoal goal_; // goal message, received from client
+    Action_Server::path_msgResult result_; // put results here, to be sent back to the client when done w/ goal
+    Action_Server::path_msgFeedback feedback_; // for feedback 
     //  use: as_.publishFeedback(feedback_); to send incremental feedback to the client
-    int countdown_val_;
-
 
   public:
     PathActionServer(); //define the body of the constructor outside of class definition
@@ -49,7 +47,7 @@ private:
     ~PathActionServer(void) {
     }
     // Action Interface
-    void executeCB(const actionlib::SimpleActionServer<Action_Server::path_msg.action>::GoalConstPtr& goal);
+    void executeCB(const actionlib::SimpleActionServer<Action_Server::path_msgAction>::GoalConstPtr& goal);
 
     double sgn(double x);
     double min_spin(double spin_angle);
@@ -88,44 +86,19 @@ private:
 // argument type is very long.  Meaning:
 // actionlib is the package for action servers
 // SimpleActionServer is a templated class in this package (defined in the "actionlib" ROS package)
-// <Action_Server::path_msg.action> customizes the simple action server to use our own "action" message 
-// defined in our package, "Action_Server", in the subdirectory "action", called "Action.action"
+// <PathActionServer::path_msgAction> customizes the simple action server to use our own "action" message 
+// defined in our package, "PathActionServer", in the subdirectory "action", called "Action.action"
 // The name "Action" is prepended to other message types created automatically during compilation.
-// e.g.,  "path_msg.action" is auto-generated from (our) base name "Action" and generic name "Action"
-  void PathActionServer::executeCB(const actionlib::SimpleActionServer<Action_Server::path_msg.action>::GoalConstPtr& goal) {
+// e.g.,  "path_msgAction" is auto-generated from (our) base name "Action" and generic name "Action"
+  void PathActionServer::executeCB(const actionlib::SimpleActionServer<Action_Server::path_msgAction>::GoalConstPtr& goal) {
     ROS_INFO("in executeCB");
-    ROS_INFO("goal input is: %d", goal->input);
 
     std::vector<double> spin_angle = goal->angle;
     std::vector<double> travel_distance = goal->distance;
     int num_angles = spin_angle.size();
-
-    ros::Rate timer(1.0); // 1Hz timer
-    countdown_val_ = goal->input;
-    //implement a simple timer, which counts down from provided countdown_val to 0, in seconds
-    while (countdown_val_>0) {
-     ROS_INFO("countdown = %d",countdown_val_);
-     
-     feedback_.fdbk = countdown_val_;
-     as.publishFeedback(feedback_);
-     for(int i = 0 ; i < num_angles; i++){
-      do_spin(spin_angle[i]);
-      do_move(travel_distance[i]);
-      ROS_INFO("spin_angle = %f", spin_angle[i]);
-      ROS_INFO("travel_distance = %f", travel_distance[i]);
-    }
-
-    do_halt();
-
-    countdown_val_--;
-    timer.sleep();
   }
 
-  result_.output = countdown_val_;
-  as_.setSucceeded(result_);
-}
-
-
+/*
        // each iteration, check if cancellation has been ordered
 if (as_.isPreemptRequested()){	
   ROS_WARN("goal cancelled!");
@@ -144,9 +117,10 @@ if (as_.isPreemptRequested()){
     result_.output = countdown_val_; //value should be zero, if completed countdown
     as_.setSucceeded(result_); // return the "result" message to client, along with "success" status
   }
+*/
 
-  /signum function: strip off and return the sign of the argument
-  double MobotActionServer::sgn(double x) {
+  //signum function: strip off and return the sign of the argument
+  double PathActionServer::sgn(double x) {
    if (x>0.0) {
     return 1.0; 
   }
@@ -158,7 +132,7 @@ if (as_.isPreemptRequested()){
 }
 
 //a function to consider periodicity and find min delta angle
-double MobotActionServer::min_spin(double spin_angle) {
+double PathActionServer::min_spin(double spin_angle) {
   if (spin_angle > M_PI) {
     spin_angle -= 2.0*M_PI;}
     if (spin_angle < -M_PI) {
@@ -167,7 +141,7 @@ double MobotActionServer::min_spin(double spin_angle) {
     }            
 
 // a useful conversion function: from quaternion to yaw
-    double MobotActionServer::convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion) {
+    double PathActionServer::convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion) {
       double quat_z = quaternion.z;
       double quat_w = quaternion.w;
     double phi = 2.0 * atan2(quat_z, quat_w); // cheap conversion from quaternion to heading for planar motion
@@ -175,7 +149,7 @@ double MobotActionServer::min_spin(double spin_angle) {
   }
 
 //and the other direction:
-  geometry_msgs::Quaternion MobotActionServer::convertPlanarPhi2Quaternion(double phi) {
+  geometry_msgs::Quaternion PathActionServer::convertPlanarPhi2Quaternion(double phi) {
     geometry_msgs::Quaternion quaternion;
     quaternion.x = 0.0;
     quaternion.y = 0.0;
@@ -184,7 +158,7 @@ double MobotActionServer::min_spin(double spin_angle) {
     return quaternion;
   }
 
-  void MobotActionServer::do_inits(ros::NodeHandle &n) {
+  void PathActionServer::do_inits(ros::NodeHandle &n) {
     //initialize components of the twist command global variable
     g_twist_cmd.linear.x=0.0;
     g_twist_cmd.linear.y=0.0;    
@@ -208,7 +182,7 @@ double MobotActionServer::min_spin(double spin_angle) {
     g_twist_commander = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);    
   }
 
-  void MobotActionServer::do_halt() {
+  void PathActionServer::do_halt() {
     ros::Rate loop_timer(1/g_sample_dt);   
     g_twist_cmd.angular.z= 0.0;
     g_twist_cmd.linear.x=0.0;
@@ -220,7 +194,7 @@ double MobotActionServer::min_spin(double spin_angle) {
 
 // a few action functions:
 //a function to reorient by a specified angle (in radians), then halt
-  void MobotActionServer::do_spin(double spin_ang) {
+  void PathActionServer::do_spin(double spin_ang) {
     ros::Rate loop_timer(1/g_sample_dt);
     double timer=0.0;
     double final_time = fabs(spin_ang)/g_spin_speed;
@@ -237,23 +211,23 @@ double MobotActionServer::min_spin(double spin_angle) {
 //a function to move forward by a specified distance (in meters), then halt
 void do_move(double distance) { // always assumes robot is already oriented properly
                                 // but allow for negative distance to mean move backwards
-    ros::Rate loop_timer(1/g_sample_dt);
-    double timer=0.0;
-    double final_time = fabs(distance)/g_move_speed;
+  ros::Rate loop_timer(1/g_sample_dt);
+  double timer=0.0;
+  double final_time = fabs(distance)/g_move_speed;
     g_twist_cmd.angular.z = 0.0; //stop spinning
     g_twist_cmd.linear.x = sgn(distance)*g_move_speed;
     while(timer<final_time) {
-          g_twist_commander.publish(g_twist_cmd);
-          timer+=g_sample_dt;
-          loop_timer.sleep(); 
-          }  
+      g_twist_commander.publish(g_twist_cmd);
+      timer+=g_sample_dt;
+      loop_timer.sleep(); 
+    }  
     do_halt();
-}
+  }
 
   int main(int argc, char** argv) {
-    ros::init(argc, argv, "timer_action_server_node"); // name this node 
+    ros::init(argc, argv, "timer_PathActionServer_node"); // name this node 
 
-    ROS_INFO("instantiating the timer_action_server: ");
+    ROS_INFO("instantiating the timer_PathActionServer: ");
 
     PathActionServer as_object; // create an instance of the class "PathActionServer"
     
